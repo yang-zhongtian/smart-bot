@@ -4,14 +4,14 @@
 #include "constants.h"
 #include "bluetooth.h"
 #include "motion.h"
-// #include "imu.h"
+#include "imu.h"
 #include "constants.h"
 
 JointServo *servo[12];
 
 MotionController motionController;
 BluetoothSerialController btController;
-// IMU imu;
+IMU imu;
 
 void Task1(void *pvParameters);
 void Task2(void *pvParameters);
@@ -20,8 +20,8 @@ void setup()
 {
   Serial.begin(115200);
 
-  // imu.setup(INTERRUPT_PIN);
-  // Serial.println("IMU setup done");
+  imu.setup(INTERRUPT_PIN);
+  Serial.println("IMU setup done");
   motionController.setup(SERVO_PINS, SERVO_OFFSETS);
   btController.setup(motionController);
 
@@ -36,6 +36,8 @@ void setup()
 
 void loop()
 {
+  imu.update();
+  delay(20);
 }
 
 void Task1(void *pvParameters)

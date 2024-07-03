@@ -103,23 +103,16 @@ void MotionController::setAutoAvoidance(bool enable)
         distance = pulseIn(SUPERSONIC_TRIG, HIGH); // 计数接收到的高电平时间
         distance = distance * 340 / 2 / 10000;     // 计算距离 1：声速：340M/S  2：实际距离为1/2声速距离 3：计数时钟为1US//温补公式：c=(331.45+0.61t/℃)m•s-1 (其中331.45是在0度）
 
-        Serial.printf("Distance: %d\n", distance);
-
         pinMode(SUPERSONIC_TRIG, OUTPUT); // 设置Trig_RX_SCL_I/O为输出，准备下次测量
 
-        if (distance <= 15)
+        if (distance <= 40)
         {
-            Serial.println("Auto avoidance triggered");
             stand();
-            Serial.println("Stand up");
             turnLeft(5);
-            Serial.println("Turn left");
         }
         else
         {
-            Serial.println("Auto avoidance not triggered");
-            stepForward(1);
-            Serial.println("Step forward");
+            stepForward(3);
         }
 
         delay(30); // 单次测离完成后加 30ms 的延时再进行下次测量。防止近距离测量时，测量到上次余波，导致测量不准确。
