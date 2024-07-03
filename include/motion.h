@@ -11,6 +11,12 @@ struct CartesianVector
     float z;
 };
 
+struct FrameHeader
+{
+    uint32_t frameSeq;
+    uint32_t frameSize;
+};
+
 class MotionController
 {
 public:
@@ -35,6 +41,7 @@ public:
     void stepBackward(unsigned int step);
     void servoCelebration();
     void servoServe();
+    void takePicture();
 
 private:
     JointServo *servo[12];

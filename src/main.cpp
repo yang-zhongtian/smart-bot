@@ -19,6 +19,7 @@ void Task2(void *pvParameters);
 void setup()
 {
   Serial.begin(115200);
+  Serial1.begin(115200, SERIAL_8N1, 16, 17);
 
   imu.setup(INTERRUPT_PIN);
   Serial.println("IMU setup done");
@@ -43,11 +44,15 @@ void loop()
 void Task1(void *pvParameters)
 {
   motionController.reset();
+  vTaskDelay(5000);
   while (1)
   {
-    vTaskDelay(20);
-    motionController.setAutoAvoidance(true);
+    // vTaskDelay(20);
+    vTaskDelay(2000);
+    // motionController.setAutoAvoidance(true);
     // btController.receive();
+
+    motionController.takePicture();
   }
 }
 

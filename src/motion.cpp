@@ -573,3 +573,28 @@ void MotionController::updateCoordinate(float &current, float target, float spee
     else
         current = target;
 }
+
+void MotionController::takePicture()
+{
+    Serial1.write(0);
+    FrameHeader header;
+    Serial1.readBytes((char *)&header, sizeof(FrameHeader));
+    Serial.println("Pic Header!");
+
+    Serial.println(header.frameSeq);
+    Serial.println(header.frameSize);
+    if (header.frameSeq != 0)
+    {
+        Serial.println("Pic Header Error!");
+        for (int i = 0; i < header.frameSize; i++)
+        {
+            Serial1.read();
+        }
+        return;
+    }
+
+    for (int i = 0; i < header.frameSize; i++)
+    {
+        Serial1.read();
+    }
+}

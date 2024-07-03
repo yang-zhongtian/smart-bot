@@ -8,6 +8,8 @@
 #define MAX_DATA_COUNT 10
 #define MAX_DATA_SIZE 256
 
+#define PICTURE_BUFFER_SIZE 1024
+
 /* Special flags */
 const float KEEP_CURRENT = 255;
 
