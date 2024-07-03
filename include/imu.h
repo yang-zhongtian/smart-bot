@@ -7,7 +7,7 @@
 class IMU
 {
 public:
-    int setup(uint8_t pin);
+    void setup(uint8_t pin);
     void update();
 
     float getYaw();

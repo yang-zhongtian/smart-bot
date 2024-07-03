@@ -1,7 +1,7 @@
 #include "imu.h"
 #include "constants.h"
 
-int IMU::setup(uint8_t pin)
+void IMU::setup(uint8_t pin)
 {
     uint8_t mpuIntStatus; // Holds actual interrupt status byte from MPU
     uint8_t devStatus;    // Return status after each device operation (0 = success, !0 = error)
@@ -17,7 +17,7 @@ int IMU::setup(uint8_t pin)
     // Verify connection
     if (!mpu.testConnection())
     {
-        return -1;
+        return;
     }
 
     pinMode(pin, INPUT);
