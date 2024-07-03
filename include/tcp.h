@@ -1,20 +1,21 @@
-#ifndef BLUETOOTH_H
-#define BLUETOOTH_H
+#ifndef TCP_SERVER_H
+#define TCP_SERVER_H
 
-#include <BluetoothSerial.h>
+#include <WiFi.h>
 #include "bltbridge.h"
 #include "motion.h"
 
-class BluetoothSerialController
+class TCPController
 {
 public:
-    BluetoothSerialController();
+    TCPController();
     void setup(MotionController &motionController);
-    void begin();
+    void begin(const char *ssid, const char *password);
     void receive();
 
 private:
-    BluetoothSerial btSerial;
+    WiFiServer *server;
+    WiFiClient client;
     MotionController *motionController;
     BltBridge bltBridge;
 

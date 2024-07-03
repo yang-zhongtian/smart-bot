@@ -11,6 +11,7 @@ enum BltBridgeOpTypes : size_t
     BLT_BRIDGE_OP_SET_AUTO_AVOIDANCE,
     BLT_BRIDGE_OP_FORWARD,
     BLT_BRIDGE_OP_BACKWARD,
+    BLT_BRIDGE_OP_TAKE_PICTURE,
 };
 
 enum BltBridgeDTypes : size_t

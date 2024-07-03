@@ -1,16 +1,14 @@
 #include <Arduino.h>
 #include <soc/soc.h>
 #include <soc/rtc_cntl_reg.h>
-#include "constants.h"
-#include "bluetooth.h"
+#include "tcp.h"
 #include "motion.h"
 #include "imu.h"
-#include "constants.h"
 
 JointServo *servo[12];
 
 MotionController motionController;
-BluetoothSerialController btController;
+TCPController tcpController;
 IMU imu;
 
 void Task1(void *pvParameters);
@@ -19,15 +17,15 @@ void Task2(void *pvParameters);
 void setup()
 {
   Serial.begin(115200);
-  Serial1.begin(115200, SERIAL_8N1, 16, 17);
+  Serial1.begin(115200, SERIAL_8N1, 0, 26);
 
   imu.setup(INTERRUPT_PIN);
   Serial.println("IMU setup done");
   motionController.setup(SERVO_PINS, SERVO_OFFSETS);
-  btController.setup(motionController);
+  tcpController.setup(motionController);
 
   motionController.init();
-  btController.begin();
+  tcpController.begin("ESP32-BLT-G24", "87654321");
   Serial.println("Bluetooth setup done");
 
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
@@ -47,12 +45,11 @@ void Task1(void *pvParameters)
   vTaskDelay(5000);
   while (1)
   {
-    // vTaskDelay(20);
-    vTaskDelay(2000);
+    vTaskDelay(20);
     // motionController.setAutoAvoidance(true);
-    // btController.receive();
-
-    motionController.takePicture();
+    tcpController.receive();
+    // motionController.takePicture();
+    // vTaskDelay(2000);
   }
 }
 

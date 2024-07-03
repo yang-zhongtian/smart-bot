@@ -10,8 +10,7 @@
 
 #define PICTURE_BUFFER_SIZE 1024
 
-/* Special flags */
-const float KEEP_CURRENT = 255;
+#define TCP_SERVER_PORT 9090
 
 /* Servo pins */
 const int SERVO_PINS[4][3] = {
@@ -61,4 +60,6 @@ const float TURN_Y1 = Y_START + Y_STEP / 2;
 const float TURN_X0 = TURN_X1 - __TEMP_B * cos(__TEMP_ALPHA);
 const float TURN_Y0 = __TEMP_B * sin(__TEMP_ALPHA) - TURN_Y1 - LENGTH_SIDE;
 
+/* Special flags */
+const float KEEP_CURRENT = 255;
 #endif

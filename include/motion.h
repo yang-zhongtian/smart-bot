@@ -17,6 +17,12 @@ struct FrameHeader
     uint32_t frameSize;
 };
 
+struct FramePayload
+{
+    uint32_t frameSize;
+    uint8_t *frameBufPtr;
+};
+
 class MotionController
 {
 public:
@@ -41,7 +47,7 @@ public:
     void stepBackward(unsigned int step);
     void servoCelebration();
     void servoServe();
-    void takePicture();
+    FramePayload takePicture();
 
 private:
     JointServo *servo[12];
@@ -53,6 +59,8 @@ private:
     const float pi = 3.1415926F;
     volatile int restCounter = 0;
     float alpha, beta, gamma;
+    uint32_t pictureSeq = 0;
+    uint8_t pictureBuf[20 * 1024];
 
     void watchReach(int leg);
     void watchAllReach();

@@ -9,9 +9,8 @@ void MotionController::setup(const int pins[4][3], const int offsets[4][3])
 {
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 3; j++)
-        {
             servo[i * 3 + j] = new JointServo(i * 3 + j, pins[i][j], offsets[i][j]);
-        }
+    memset(pictureBuf, 0, sizeof(pictureBuf));
 }
 
 void MotionController::init()
@@ -574,27 +573,28 @@ void MotionController::updateCoordinate(float &current, float target, float spee
         current = target;
 }
 
-void MotionController::takePicture()
+FramePayload MotionController::takePicture()
 {
-    Serial1.write(0);
+    Serial1.write(reinterpret_cast<const uint8_t *>(&pictureSeq), sizeof(pictureSeq));
     FrameHeader header;
-    Serial1.readBytes((char *)&header, sizeof(FrameHeader));
+    FramePayload payload;
+
+    Serial1.readBytes(reinterpret_cast<char *>(&header), sizeof(FrameHeader));
     Serial.println("Pic Header!");
 
     Serial.println(header.frameSeq);
     Serial.println(header.frameSize);
-    if (header.frameSeq != 0)
+    if (header.frameSeq != pictureSeq)
     {
         Serial.println("Pic Header Error!");
-        for (int i = 0; i < header.frameSize; i++)
-        {
-            Serial1.read();
-        }
-        return;
+        payload.frameSize = 0;
+        return payload;
     }
 
-    for (int i = 0; i < header.frameSize; i++)
-    {
-        Serial1.read();
-    }
+    Serial1.readBytes(reinterpret_cast<char *>(pictureBuf), header.frameSize);
+
+    payload.frameSize = header.frameSize;
+    payload.frameBufPtr = pictureBuf;
+    pictureSeq++;
+    return payload;
 }
