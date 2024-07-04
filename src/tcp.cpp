@@ -4,10 +4,11 @@ TCPController::TCPController()
 {
 }
 
-void TCPController::setup(MotionController &motionController)
+void TCPController::setup(MotionController &motionController, TaskHandle_t *task4Handle)
 {
     this->server = new WiFiServer(TCP_SERVER_PORT);
     this->motionController = &motionController;
+    this->task4Handle = task4Handle;
 }
 
 void TCPController::begin(const char *ssid, const char *password)
@@ -105,6 +106,10 @@ void TCPController::processReceivedData(const BltBridgeData &data)
     case BLT_BRIDGE_OP_TAKE_PICTURE:
         motionController->takePicture();
         break;
+    case BLT_BRIDGE_OP_CONTINUE:
+        if (task4Handle)
+            xTaskNotifyGive(*task4Handle);
+        break;
     }
 }
 
@@ -127,7 +132,7 @@ void TCPController::sendResponse(const BltBridgeParams &response)
 
 void TCPController::pictureConsume()
 {
-    if (!client || !client.connected() || !client.available())
+    if (!client || !client.connected())
         return;
 
     FramePayload data;
@@ -141,5 +146,5 @@ void TCPController::pictureConsume()
     sendResponse(response);
     client.write(data.frameBufPtr, data.frameSize);
 
-    delete data.frameBufPtr;
+    free(data.frameBufPtr);
 }

@@ -39,6 +39,7 @@ public:
     float getMoveSpeed();
     void setMoveSpeed(float speed);
     void setAutoAvoidance(bool enable);
+    void autoAvoidanceWorker();
     void reset();
     void raiseHead();
     void lowerHead();

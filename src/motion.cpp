@@ -86,36 +86,39 @@ void MotionController::setAutoAvoidance(bool enable)
     }
 
     autoAvoidanceEnabled = enable;
+}
 
-    int distance = 0;
-    while (autoAvoidanceEnabled)
+void MotionController::autoAvoidanceWorker()
+{
+    if (!autoAvoidanceEnabled)
+        return;
+
+    pinMode(SUPERSONIC_TRIG, OUTPUT); // 设置 Trig_RX_SCL_I/O 为输出
+
+    digitalWrite(SUPERSONIC_TRIG, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(SUPERSONIC_TRIG, LOW); // Trig_RX_SCL_I/O 脚输出10US高电平脉冲触发信号
+
+    pinMode(SUPERSONIC_TRIG, INPUT); // 设置 Trig_RX_SCL_I/O 为输入，接收模块反馈的距离信号
+
+    int distance = pulseIn(SUPERSONIC_TRIG, HIGH); // 计数接收到的高电平时间
+    distance = distance * 340 / 2 / 10000;         // 计算距离 1：声速：340M/S  2：实际距离为1/2声速距离 3：计数时钟为1US//温补公式：c=(331.45+0.61t/℃)m•s-1 (其中331.45是在0度）
+
+    pinMode(SUPERSONIC_TRIG, OUTPUT); // 设置Trig_RX_SCL_I/O为输出，准备下次测量
+
+    if (distance <= 40)
     {
-        vTaskDelay(10);
-        pinMode(SUPERSONIC_TRIG, OUTPUT); // 设置 Trig_RX_SCL_I/O 为输出
-
-        digitalWrite(SUPERSONIC_TRIG, HIGH);
-        delayMicroseconds(10);
-        digitalWrite(SUPERSONIC_TRIG, LOW); // Trig_RX_SCL_I/O 脚输出10US高电平脉冲触发信号
-
-        pinMode(SUPERSONIC_TRIG, INPUT); // 设置 Trig_RX_SCL_I/O 为输入，接收模块反馈的距离信号
-
-        distance = pulseIn(SUPERSONIC_TRIG, HIGH); // 计数接收到的高电平时间
-        distance = distance * 340 / 2 / 10000;     // 计算距离 1：声速：340M/S  2：实际距离为1/2声速距离 3：计数时钟为1US//温补公式：c=(331.45+0.61t/℃)m•s-1 (其中331.45是在0度）
-
-        pinMode(SUPERSONIC_TRIG, OUTPUT); // 设置Trig_RX_SCL_I/O为输出，准备下次测量
-
-        if (distance <= 40)
-        {
-            stand();
-            turnLeft(5);
-        }
-        else
-        {
-            stepForward(3);
-        }
-
-        delay(30); // 单次测离完成后加 30ms 的延时再进行下次测量。防止近距离测量时，测量到上次余波，导致测量不准确。
+        stand();
+        takePicture();
+        ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(8000));
+        turnLeft(5);
     }
+    else
+    {
+        stepForward(3);
+    }
+
+    delay(30); // 单次测离完成后加 30ms 的延时再进行下次测量。防止近距离测量时，测量到上次余波，导致测量不准确。
 }
 
 float MotionController::getMoveSpeed()
@@ -592,7 +595,7 @@ void MotionController::takePicture()
     FramePayload payload;
 
     payload.frameSize = header.frameSize;
-    payload.frameBufPtr = new (uint8_t[payload.frameSize]);
+    payload.frameBufPtr = (uint8_t *)malloc(header.frameSize);
 
     Serial1.readBytes(reinterpret_cast<char *>(payload.frameBufPtr), header.frameSize);
 
@@ -601,7 +604,7 @@ void MotionController::takePicture()
         /* If data sent successfully, then free the pointer in `xQueueReceive'
          * after processing it. Or else if enqueue in not successful, free it
          * here. */
-        delete payload.frameBufPtr;
+        free(payload.frameBufPtr);
     }
 
     pictureSeq = (pictureSeq + 1) % 10000;

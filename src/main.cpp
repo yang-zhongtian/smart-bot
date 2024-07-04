@@ -14,6 +14,9 @@ IMU imu;
 void Task1(void *pvParameters);
 void Task2(void *pvParameters);
 void Task3(void *pvParameters);
+void Task4(void *pvParameters);
+
+TaskHandle_t task4Handle = NULL;
 
 void setup()
 {
@@ -23,7 +26,7 @@ void setup()
   imu.setup(INTERRUPT_PIN);
   Serial.println("IMU setup done");
   motionController.setup(SERVO_PINS, SERVO_OFFSETS);
-  tcpController.setup(motionController);
+  tcpController.setup(motionController, &task4Handle);
 
   motionController.init();
   tcpController.begin("ESP32-BLT-G24", "87654321");
@@ -33,6 +36,7 @@ void setup()
   xTaskCreatePinnedToCore(Task1, "Task1", 10000, NULL, 1, NULL, 0);
   xTaskCreatePinnedToCore(Task2, "Task1", 10000, NULL, 1, NULL, 0);
   xTaskCreatePinnedToCore(Task3, "Task3", 10000, NULL, 1, NULL, 1);
+  xTaskCreatePinnedToCore(Task4, "Task4", 10000, NULL, 1, &task4Handle, 1);
 }
 
 void loop()
@@ -70,5 +74,14 @@ void Task3(void *pvParameters)
   {
     vTaskDelay(15);
     motionController.servoServe();
+  }
+}
+
+void Task4(void *pvParameters)
+{
+  while (1)
+  {
+    vTaskDelay(10);
+    motionController.autoAvoidanceWorker();
   }
 }
