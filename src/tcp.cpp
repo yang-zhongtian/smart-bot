@@ -80,18 +80,10 @@ void TCPController::processReceivedData(const BltBridgeData &data)
     int index, value;
     bool enable;
     FramePayload payload;
-    BltBridgeParams response;
 
     bltBridge.setData(data);
     switch (data.opType)
     {
-    case BLT_BRIDGE_OP_GET_OFFSET:
-        index = bltBridge.getIntegerData(0);
-        value = motionController->getOffset(index);
-        response.dtype = BLT_BRIDGE_DTYPE_INT;
-        response.data.intValue = value;
-        sendResponse(response);
-        break;
     case BLT_BRIDGE_OP_SET_OFFSET:
         index = bltBridge.getIntegerData(0);
         value = bltBridge.getIntegerData(1);
@@ -111,11 +103,8 @@ void TCPController::processReceivedData(const BltBridgeData &data)
         motionController->stepBackward(value);
         break;
     case BLT_BRIDGE_OP_TAKE_PICTURE:
-        payload = motionController->takePicture();
-        response.dtype = BLT_BRIDGE_DTYPE_INT;
-        response.data.intValue = payload.frameSize;
-        sendResponse(response);
-        client.write(payload.frameBufPtr, payload.frameSize);
+        motionController->takePicture();
+        break;
     }
 }
 
@@ -134,4 +123,23 @@ void TCPController::sendResponse(const BltBridgeParams &response)
         client.write(reinterpret_cast<const uint8_t *>(&response.data.boolValue), sizeof(response.data.boolValue));
         break;
     }
+}
+
+void TCPController::pictureConsume()
+{
+    if (!client || !client.connected() || !client.available())
+        return;
+
+    FramePayload data;
+    if (xQueueReceive(motionController->pictureQueue, &data, portMAX_DELAY) != pdPASS)
+        return;
+
+    BltBridgeParams response;
+    response.dtype = BLT_BRIDGE_DTYPE_INT;
+    response.data.intValue = data.frameSize;
+
+    sendResponse(response);
+    client.write(data.frameBufPtr, data.frameSize);
+
+    delete data.frameBufPtr;
 }

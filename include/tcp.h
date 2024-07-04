@@ -12,6 +12,7 @@ public:
     void setup(MotionController &motionController);
     void begin(const char *ssid, const char *password);
     void receive();
+    void pictureConsume();
 
 private:
     WiFiServer *server;

@@ -2,6 +2,8 @@
 #define MOTION_H
 
 #include <Esp32Servo.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 #include "servo.h"
 
 struct CartesianVector
@@ -26,6 +28,8 @@ struct FramePayload
 class MotionController
 {
 public:
+    QueueHandle_t pictureQueue;
+
     MotionController();
     void setup(const int pins[4][3], const int offsets[4][3]);
     void init();
@@ -47,7 +51,7 @@ public:
     void stepBackward(unsigned int step);
     void servoCelebration();
     void servoServe();
-    FramePayload takePicture();
+    void takePicture();
 
 private:
     JointServo *servo[12];
@@ -60,7 +64,6 @@ private:
     volatile int restCounter = 0;
     float alpha, beta, gamma;
     uint32_t pictureSeq = 0;
-    uint8_t pictureBuf[20 * 1024];
 
     void watchReach(int leg);
     void watchAllReach();

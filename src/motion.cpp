@@ -10,7 +10,7 @@ void MotionController::setup(const int pins[4][3], const int offsets[4][3])
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 3; j++)
             servo[i * 3 + j] = new JointServo(i * 3 + j, pins[i][j], offsets[i][j]);
-    memset(pictureBuf, 0, sizeof(pictureBuf));
+    pictureQueue = xQueueCreate(5, sizeof(FramePayload));
 }
 
 void MotionController::init()
@@ -573,11 +573,10 @@ void MotionController::updateCoordinate(float &current, float target, float spee
         current = target;
 }
 
-FramePayload MotionController::takePicture()
+void MotionController::takePicture()
 {
     Serial1.write(reinterpret_cast<const uint8_t *>(&pictureSeq), sizeof(pictureSeq));
     FrameHeader header;
-    FramePayload payload;
 
     Serial1.readBytes(reinterpret_cast<char *>(&header), sizeof(FrameHeader));
     Serial.println("Pic Header!");
@@ -587,14 +586,23 @@ FramePayload MotionController::takePicture()
     if (header.frameSeq != pictureSeq)
     {
         Serial.println("Pic Header Error!");
-        payload.frameSize = 0;
-        return payload;
+        return;
     }
 
-    Serial1.readBytes(reinterpret_cast<char *>(pictureBuf), header.frameSize);
+    FramePayload payload;
 
     payload.frameSize = header.frameSize;
-    payload.frameBufPtr = pictureBuf;
-    pictureSeq++;
-    return payload;
+    payload.frameBufPtr = new (uint8_t[payload.frameSize]);
+
+    Serial1.readBytes(reinterpret_cast<char *>(payload.frameBufPtr), header.frameSize);
+
+    if (xQueueSend(pictureQueue, (void *)&payload, (TickType_t)0) != pdTRUE)
+    {
+        /* If data sent successfully, then free the pointer in `xQueueReceive'
+         * after processing it. Or else if enqueue in not successful, free it
+         * here. */
+        delete payload.frameBufPtr;
+    }
+
+    pictureSeq = (pictureSeq + 1) % 10000;
 }

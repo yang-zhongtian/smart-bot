@@ -6,7 +6,6 @@
 
 enum BltBridgeOpTypes : size_t
 {
-    BLT_BRIDGE_OP_GET_OFFSET,
     BLT_BRIDGE_OP_SET_OFFSET,
     BLT_BRIDGE_OP_SET_AUTO_AVOIDANCE,
     BLT_BRIDGE_OP_FORWARD,
@@ -40,7 +39,6 @@ struct BltBridgeData
     std::size_t dCount;
     BltBridgeParams params[MAX_DATA_COUNT];
 };
-
 
 class BltBridge
 {

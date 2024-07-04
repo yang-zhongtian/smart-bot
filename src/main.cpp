@@ -13,6 +13,7 @@ IMU imu;
 
 void Task1(void *pvParameters);
 void Task2(void *pvParameters);
+void Task3(void *pvParameters);
 
 void setup()
 {
@@ -30,7 +31,8 @@ void setup()
 
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   xTaskCreatePinnedToCore(Task1, "Task1", 10000, NULL, 1, NULL, 0);
-  xTaskCreatePinnedToCore(Task2, "Task2", 10000, NULL, 1, NULL, 1);
+  xTaskCreatePinnedToCore(Task2, "Task1", 10000, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(Task3, "Task3", 10000, NULL, 1, NULL, 1);
 }
 
 void loop()
@@ -54,6 +56,15 @@ void Task1(void *pvParameters)
 }
 
 void Task2(void *pvParameters)
+{
+  while (1)
+  {
+    vTaskDelay(20);
+    tcpController.pictureConsume();
+  }
+}
+
+void Task3(void *pvParameters)
 {
   while (1)
   {
