@@ -63,7 +63,6 @@ void Task2(void *pvParameters)
 {
   while (1)
   {
-    vTaskDelay(20);
     tcpController.pictureConsume();
   }
 }

@@ -132,12 +132,18 @@ void TCPController::sendResponse(const BltBridgeParams &response)
 
 void TCPController::pictureConsume()
 {
-    if (!client || !client.connected())
+    if (!client)
+    {
+        vTaskDelay(20);
         return;
+    }
 
     FramePayload data;
     if (xQueueReceive(motionController->pictureQueue, &data, portMAX_DELAY) != pdPASS)
+    {
+        vTaskDelay(20);
         return;
+    }
 
     BltBridgeParams response;
     response.dtype = BLT_BRIDGE_DTYPE_INT;
