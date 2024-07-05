@@ -4,6 +4,8 @@
 #include <cstdint>
 #include "MPU6050_6Axis_MotionApps20.h"
 
+#define INTERRUPT_PIN 16
+
 class IMU
 {
 public:

@@ -4,6 +4,9 @@
 #include <cstring>
 #include "constants.h"
 
+#define MAX_DATA_COUNT 10
+#define MAX_DATA_SIZE 256
+
 enum BltBridgeOpTypes : size_t
 {
     BLT_BRIDGE_OP_SET_OFFSET,

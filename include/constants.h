@@ -3,13 +3,6 @@
 
 #include <cmath>
 
-#define INTERRUPT_PIN 16
-
-#define MAX_DATA_COUNT 10
-#define MAX_DATA_SIZE 256
-
-#define PICTURE_BUFFER_SIZE 1024
-
 #define TCP_SERVER_PORT 9090
 
 /* Servo pins */
