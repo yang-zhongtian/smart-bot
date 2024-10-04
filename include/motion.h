@@ -13,12 +13,6 @@ struct CartesianVector
     float z;
 };
 
-struct FrameHeader
-{
-    uint32_t frameSeq;
-    uint32_t frameSize;
-};
-
 struct FramePayload
 {
     uint32_t frameSize;
@@ -28,7 +22,9 @@ struct FramePayload
 class MotionController
 {
 public:
-    QueueHandle_t pictureQueue;
+    QueueHandle_t servoQueue;
+    SemaphoreHandle_t obstacleTriggerSemaphore;
+    bool motorMonitorEnabled = false;
 
     MotionController();
     void setup(const int pins[4][3], const int offsets[4][3]);
@@ -52,7 +48,6 @@ public:
     void stepBackward(unsigned int step);
     void servoCelebration();
     void servoServe();
-    void takePicture();
 
 private:
     JointServo *servo[12];
@@ -64,7 +59,6 @@ private:
     const float pi = 3.1415926F;
     volatile int restCounter = 0;
     float alpha, beta, gamma;
-    uint32_t pictureSeq = 0;
 
     void watchReach(int leg);
     void watchAllReach();

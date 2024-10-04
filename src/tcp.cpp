@@ -13,14 +13,16 @@ void TCPController::setup(MotionController &motionController, TaskHandle_t *task
 
 void TCPController::begin(const char *ssid, const char *password)
 {
-    Serial.println("Setting up WiFi SoftAP...");
-    WiFi.softAP(ssid, password);
+    WiFi.mode(WIFI_STA);
 
-    IPAddress IP = WiFi.softAPIP();
-    Serial.print("SoftAP IP address: ");
-    Serial.println(IP);
+    WiFi.begin(ssid, password);
 
-    server->begin();
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+    }
+
+    this->server->begin();
 }
 
 void TCPController::receive()
@@ -95,6 +97,10 @@ void TCPController::processReceivedData(const BltBridgeData &data)
         enable = bltBridge.getBoolData(0);
         motionController->setAutoAvoidance(enable);
         break;
+    case BLT_BRIDGE_OP_SET_MOTOR_MONITOR:
+        enable = bltBridge.getBoolData(0);
+        motionController->motorMonitorEnabled = enable;
+        break;
     case BLT_BRIDGE_OP_FORWARD:
         value = bltBridge.getIntegerData(0);
         motionController->stepForward(value);
@@ -103,9 +109,6 @@ void TCPController::processReceivedData(const BltBridgeData &data)
         value = bltBridge.getIntegerData(0);
         motionController->stepBackward(value);
         break;
-    case BLT_BRIDGE_OP_TAKE_PICTURE:
-        motionController->takePicture();
-        break;
     case BLT_BRIDGE_OP_CONTINUE:
         if (task4Handle)
             xTaskNotifyGive(*task4Handle);
@@ -113,44 +116,24 @@ void TCPController::processReceivedData(const BltBridgeData &data)
     }
 }
 
-void TCPController::sendResponse(const BltBridgeParams &response)
+void TCPController::sendServoAngle()
 {
-    client.write(reinterpret_cast<const uint8_t *>(&response.dtype), sizeof(response.dtype));
-    switch (response.dtype)
+    ServoPayload data;
+    if (xQueueReceive(motionController->servoQueue, &data, portMAX_DELAY) != pdPASS)
     {
-    case BLT_BRIDGE_DTYPE_INT:
-        client.write(reinterpret_cast<const uint8_t *>(&response.data.intValue), sizeof(response.data.intValue));
-        break;
-    case BLT_BRIDGE_DTYPE_FLOAT:
-        client.write(reinterpret_cast<const uint8_t *>(&response.data.floatValue), sizeof(response.data.floatValue));
-        break;
-    case BLT_BRIDGE_DTYPE_BOOL:
-        client.write(reinterpret_cast<const uint8_t *>(&response.data.boolValue), sizeof(response.data.boolValue));
-        break;
+        vTaskDelay(20);
+        return;
     }
+    if (!motionController->motorMonitorEnabled)
+        return;
+    BltHostOpTypes opType = BLT_HOST_SERVO_ANGLE;
+    client.write(reinterpret_cast<const uint8_t *>(&opType), sizeof(opType));
+    client.write(reinterpret_cast<const uint8_t *>(&data.servoIndex), sizeof(data.servoIndex));
+    client.write(reinterpret_cast<const uint8_t *>(&data.angle), sizeof(data.angle));
 }
 
-void TCPController::pictureConsume()
+void TCPController::sendTriggerObstacle()
 {
-    if (!client)
-    {
-        vTaskDelay(20);
-        return;
-    }
-
-    FramePayload data;
-    if (xQueueReceive(motionController->pictureQueue, &data, portMAX_DELAY) != pdPASS)
-    {
-        vTaskDelay(20);
-        return;
-    }
-
-    BltBridgeParams response;
-    response.dtype = BLT_BRIDGE_DTYPE_INT;
-    response.data.intValue = data.frameSize;
-
-    sendResponse(response);
-    client.write(data.frameBufPtr, data.frameSize);
-
-    free(data.frameBufPtr);
+    BltHostOpTypes opType = BLT_HOST_TRIGGER_OBSTACLE;
+    client.write(reinterpret_cast<const uint8_t *>(&opType), sizeof(opType));
 }

@@ -12,7 +12,8 @@ public:
     void setup(MotionController &motionController, TaskHandle_t *task4Handle);
     void begin(const char *ssid, const char *password);
     void receive();
-    void pictureConsume();
+    void sendServoAngle();
+    void sendTriggerObstacle();
 
 private:
     WiFiServer *server;
@@ -22,7 +23,6 @@ private:
     TaskHandle_t *task4Handle = NULL;
 
     void processReceivedData(const BltBridgeData &data);
-    void sendResponse(const BltBridgeParams &response);
 };
 
 #endif

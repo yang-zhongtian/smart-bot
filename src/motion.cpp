@@ -7,10 +7,11 @@ MotionController::MotionController()
 
 void MotionController::setup(const int pins[4][3], const int offsets[4][3])
 {
+    servoQueue = xQueueCreate(10, sizeof(FramePayload));
+    obstacleTriggerSemaphore = xSemaphoreCreateBinary();
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 3; j++)
-            servo[i * 3 + j] = new JointServo(i * 3 + j, pins[i][j], offsets[i][j]);
-    pictureQueue = xQueueCreate(5, sizeof(FramePayload));
+            servo[i * 3 + j] = new JointServo(servoQueue, i * 3 + j, pins[i][j], offsets[i][j]);
 }
 
 void MotionController::init()
@@ -26,6 +27,7 @@ void MotionController::init()
         siteNow[i].y = siteExpect[i].y;
         siteNow[i].z = siteExpect[i].z;
     }
+
     for (int i = 0; i < 12; i++)
     {
         servo[i]->setup(90);
@@ -109,7 +111,7 @@ void MotionController::autoAvoidanceWorker()
     if (distance <= 40)
     {
         stand();
-        takePicture();
+        xSemaphoreGive(obstacleTriggerSemaphore);
         ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(8000));
         turnLeft(5);
     }
@@ -574,38 +576,4 @@ void MotionController::updateCoordinate(float &current, float target, float spee
         current += speed;
     else
         current = target;
-}
-
-void MotionController::takePicture()
-{
-    Serial1.write(reinterpret_cast<const uint8_t *>(&pictureSeq), sizeof(pictureSeq));
-    FrameHeader header;
-
-    Serial1.readBytes(reinterpret_cast<char *>(&header), sizeof(FrameHeader));
-    Serial.println("Pic Header!");
-
-    Serial.println(header.frameSeq);
-    Serial.println(header.frameSize);
-    if (header.frameSeq != pictureSeq)
-    {
-        Serial.println("Pic Header Error!");
-        return;
-    }
-
-    FramePayload payload;
-
-    payload.frameSize = header.frameSize;
-    payload.frameBufPtr = (uint8_t *)malloc(header.frameSize);
-
-    Serial1.readBytes(reinterpret_cast<char *>(payload.frameBufPtr), header.frameSize);
-
-    if (xQueueSend(pictureQueue, (void *)&payload, (TickType_t)0) != pdTRUE)
-    {
-        /* If data sent successfully, then free the pointer in `xQueueReceive'
-         * after processing it. Or else if enqueue in not successful, free it
-         * here. */
-        free(payload.frameBufPtr);
-    }
-
-    pictureSeq = (pictureSeq + 1) % 10000;
 }
