@@ -9,6 +9,7 @@ void TCPController::setup(MotionController &motionController, TaskHandle_t *task
     this->server = new WiFiServer(TCP_SERVER_PORT);
     this->motionController = &motionController;
     this->task4Handle = task4Handle;
+    this->xSemaphore = xSemaphoreCreateMutex();
 }
 
 void TCPController::begin(const char *ssid, const char *password)
@@ -59,21 +60,21 @@ void TCPController::receive()
             }
         }
 
-        for (int i = 0; i < receivedData.dCount; i++)
-        {
-            switch (receivedData.params[i].dtype)
-            {
-            case BLT_BRIDGE_DTYPE_INT:
-                Serial.printf("BluetoothSerialController::receive: %d\n", receivedData.params[i].data.intValue);
-                break;
-            case BLT_BRIDGE_DTYPE_FLOAT:
-                Serial.printf("BluetoothSerialController::receive: %f\n", receivedData.params[i].data.floatValue);
-                break;
-            case BLT_BRIDGE_DTYPE_BOOL:
-                Serial.printf("BluetoothSerialController::receive: %d\n", receivedData.params[i].data.boolValue);
-                break;
-            }
-        }
+        // for (int i = 0; i < receivedData.dCount; i++)
+        // {
+        //     switch (receivedData.params[i].dtype)
+        //     {
+        //     case BLT_BRIDGE_DTYPE_INT:
+        //         Serial.printf("BluetoothSerialController::receive: %d\n", receivedData.params[i].data.intValue);
+        //         break;
+        //     case BLT_BRIDGE_DTYPE_FLOAT:
+        //         Serial.printf("BluetoothSerialController::receive: %f\n", receivedData.params[i].data.floatValue);
+        //         break;
+        //     case BLT_BRIDGE_DTYPE_BOOL:
+        //         Serial.printf("BluetoothSerialController::receive: %d\n", receivedData.params[i].data.boolValue);
+        //         break;
+        //     }
+        // }
         processReceivedData(receivedData);
     }
 }
@@ -90,7 +91,6 @@ void TCPController::processReceivedData(const BltBridgeData &data)
     case BLT_BRIDGE_OP_SET_OFFSET:
         index = bltBridge.getIntegerData(0);
         value = bltBridge.getIntegerData(1);
-        Serial.printf("BluetoothSerialController::processReceivedData: index=%d, value=%d\n", index, value);
         motionController->setOffset(index, value);
         break;
     case BLT_BRIDGE_OP_SET_AUTO_AVOIDANCE:
@@ -127,13 +127,21 @@ void TCPController::sendServoAngle()
     if (!motionController->motorMonitorEnabled)
         return;
     BltHostOpTypes opType = BLT_HOST_SERVO_ANGLE;
-    client.write(reinterpret_cast<const uint8_t *>(&opType), sizeof(opType));
-    client.write(reinterpret_cast<const uint8_t *>(&data.servoIndex), sizeof(data.servoIndex));
-    client.write(reinterpret_cast<const uint8_t *>(&data.angle), sizeof(data.angle));
+    if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE)
+    {
+        client.write(reinterpret_cast<const uint8_t *>(&opType), sizeof(opType));
+        client.write(reinterpret_cast<const uint8_t *>(&data.servoIndex), sizeof(data.servoIndex));
+        client.write(reinterpret_cast<const uint8_t *>(&data.angle), sizeof(data.angle));
+        xSemaphoreGive(xSemaphore);
+    }
 }
 
 void TCPController::sendTriggerObstacle()
 {
     BltHostOpTypes opType = BLT_HOST_TRIGGER_OBSTACLE;
-    client.write(reinterpret_cast<const uint8_t *>(&opType), sizeof(opType));
+    if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE)
+    {
+        client.write(reinterpret_cast<const uint8_t *>(&opType), sizeof(opType));
+        xSemaphoreGive(xSemaphore);
+    }
 }

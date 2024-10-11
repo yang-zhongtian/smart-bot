@@ -45,9 +45,9 @@ void setup()
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   xTaskCreatePinnedToCore(Task1, "Task1", 10000, NULL, 1, NULL, 0);
   xTaskCreatePinnedToCore(Task2, "Task1", 10000, NULL, 1, NULL, 0);
-  xTaskCreatePinnedToCore(Task3, "Task3", 10000, NULL, 1, NULL, 1);
+  xTaskCreatePinnedToCore(Task3, "Task3", 10000, NULL, 2, NULL, 1);
   xTaskCreatePinnedToCore(Task4, "Task4", 10000, NULL, 1, &task4Handle, 1);
-  xTaskCreatePinnedToCore(Task5, "Task5", 10000, NULL, 1, NULL, 1);
+  xTaskCreatePinnedToCore(Task5, "Task5", 10000, NULL, 2, NULL, 1);
 
   MDNS.addService(service, "tcp", TCP_SERVER_PORT);
 }
@@ -104,5 +104,5 @@ void Task5(void *pvParameters)
   {
     if (xSemaphoreTake(motionController.obstacleTriggerSemaphore, portMAX_DELAY) == pdTRUE)
       tcpController.sendTriggerObstacle();
-  }
+    }
 }

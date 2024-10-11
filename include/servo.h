@@ -29,6 +29,7 @@ private:
     int offset;
     volatile int posture_offset;
     Servo servo;
+    int servoAngle;
 };
 
 #endif

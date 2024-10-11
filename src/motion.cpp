@@ -7,7 +7,7 @@ MotionController::MotionController()
 
 void MotionController::setup(const int pins[4][3], const int offsets[4][3])
 {
-    servoQueue = xQueueCreate(10, sizeof(FramePayload));
+    servoQueue = xQueueCreate(20, sizeof(FramePayload));
     obstacleTriggerSemaphore = xSemaphoreCreateBinary();
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 3; j++)

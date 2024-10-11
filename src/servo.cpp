@@ -24,10 +24,13 @@ void JointServo::setup(int angle)
 void JointServo::write(int angle)
 {
     this->servo.write(angle + this->offset);
+    if (this->servoAngle == angle)
+        return;
     ServoPayload data;
     data.servoIndex = this->index;
     data.angle = angle;
     xQueueSend(this->servoQueue, &data, 0);
+    this->servoAngle = angle;
 }
 
 int JointServo::getOffset()

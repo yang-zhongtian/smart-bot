@@ -21,6 +21,7 @@ private:
     MotionController *motionController;
     BltBridge bltBridge;
     TaskHandle_t *task4Handle = NULL;
+    SemaphoreHandle_t xSemaphore;
 
     void processReceivedData(const BltBridgeData &data);
 };
