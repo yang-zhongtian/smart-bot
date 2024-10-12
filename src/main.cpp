@@ -28,6 +28,7 @@ TaskHandle_t task4Handle = NULL;
 
 void setup()
 {
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   Serial.begin(115200);
 
   imu.setup(INTERRUPT_PIN);
@@ -42,7 +43,6 @@ void setup()
 
   Serial.println("Setup done");
 
-  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   xTaskCreatePinnedToCore(Task1, "Task1", 10000, NULL, 1, NULL, 0);
   xTaskCreatePinnedToCore(Task2, "Task1", 10000, NULL, 1, NULL, 0);
   xTaskCreatePinnedToCore(Task3, "Task3", 10000, NULL, 2, NULL, 1);
@@ -75,8 +75,8 @@ void Task2(void *pvParameters)
 {
   while (1)
   {
-    vTaskDelay(15);
     tcpController.sendServoAngle();
+    vTaskDelay(pdMS_TO_TICKS(400));
   }
 }
 

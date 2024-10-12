@@ -109,6 +109,17 @@ void TCPController::processReceivedData(const BltBridgeData &data)
         value = bltBridge.getIntegerData(0);
         motionController->stepBackward(value);
         break;
+    case BLT_BRIDGE_OP_TURN_LEFT:
+        value = bltBridge.getIntegerData(0);
+        motionController->turnLeft(value);
+        break;
+    case BLT_BRIDGE_OP_TURN_RIGHT:
+        value = bltBridge.getIntegerData(0);
+        motionController->turnRight(value);
+        break;
+    case BLT_BRIDGE_OP_STAND:
+        motionController->reset();
+        break;
     case BLT_BRIDGE_OP_CONTINUE:
         if (task4Handle)
             xTaskNotifyGive(*task4Handle);
@@ -118,20 +129,16 @@ void TCPController::processReceivedData(const BltBridgeData &data)
 
 void TCPController::sendServoAngle()
 {
-    ServoPayload data;
-    if (xQueueReceive(motionController->servoQueue, &data, portMAX_DELAY) != pdPASS)
-    {
-        vTaskDelay(20);
-        return;
-    }
     if (!motionController->motorMonitorEnabled)
         return;
     BltHostOpTypes opType = BLT_HOST_SERVO_ANGLE;
     if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE)
     {
         client.write(reinterpret_cast<const uint8_t *>(&opType), sizeof(opType));
-        client.write(reinterpret_cast<const uint8_t *>(&data.servoIndex), sizeof(data.servoIndex));
-        client.write(reinterpret_cast<const uint8_t *>(&data.angle), sizeof(data.angle));
+        for (int i = 0; i < 12; i++)
+        {
+            client.write(reinterpret_cast<const uint8_t *>(&motionController->servo[i]->servoAngle), sizeof(int));
+        }
         xSemaphoreGive(xSemaphore);
     }
 }

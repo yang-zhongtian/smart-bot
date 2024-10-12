@@ -7,11 +7,10 @@ MotionController::MotionController()
 
 void MotionController::setup(const int pins[4][3], const int offsets[4][3])
 {
-    servoQueue = xQueueCreate(20, sizeof(FramePayload));
     obstacleTriggerSemaphore = xSemaphoreCreateBinary();
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 3; j++)
-            servo[i * 3 + j] = new JointServo(servoQueue, i * 3 + j, pins[i][j], offsets[i][j]);
+            servo[i * 3 + j] = new JointServo(i * 3 + j, pins[i][j], offsets[i][j]);
 }
 
 void MotionController::init()

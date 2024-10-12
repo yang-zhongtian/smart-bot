@@ -22,9 +22,9 @@ struct FramePayload
 class MotionController
 {
 public:
-    QueueHandle_t servoQueue;
     SemaphoreHandle_t obstacleTriggerSemaphore;
     bool motorMonitorEnabled = false;
+    JointServo *servo[12];
 
     MotionController();
     void setup(const int pins[4][3], const int offsets[4][3]);
@@ -50,7 +50,6 @@ public:
     void servoServe();
 
 private:
-    JointServo *servo[12];
     CartesianVector siteNow[4];
     CartesianVector siteExpect[4];
     CartesianVector tempSpeed[4];

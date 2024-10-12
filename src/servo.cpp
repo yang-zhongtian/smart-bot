@@ -1,13 +1,8 @@
 #include "servo.h"
 #include "constants.h"
 
-JointServo::JointServo()
+JointServo::JointServo(int index, int pin, int offset)
 {
-}
-
-JointServo::JointServo(QueueHandle_t servoQueue, int index, int pin, int offset)
-{
-    this->servoQueue = servoQueue;
     this->index = index;
     this->pin = pin;
     this->offset = offset;
@@ -26,10 +21,6 @@ void JointServo::write(int angle)
     this->servo.write(angle + this->offset);
     if (this->servoAngle == angle)
         return;
-    ServoPayload data;
-    data.servoIndex = this->index;
-    data.angle = angle;
-    xQueueSend(this->servoQueue, &data, 0);
     this->servoAngle = angle;
 }
 

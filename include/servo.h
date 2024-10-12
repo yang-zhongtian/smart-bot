@@ -3,17 +3,11 @@
 
 #include <Esp32Servo.h>
 
-struct ServoPayload
-{
-    uint8_t servoIndex;
-    uint8_t angle;
-};
-
 class JointServo
 {
 public:
-    JointServo();
-    JointServo(QueueHandle_t servoQueue, int index, int pin, int offset);
+    int servoAngle;
+    JointServo(int index, int pin, int offset);
     void setup(int angle);
     void write(int angle);
     int getOffset();
@@ -23,13 +17,11 @@ public:
     void increasePostureOffset(int offset);
 
 private:
-    QueueHandle_t servoQueue;
     int index;
     int pin;
     int offset;
     volatile int posture_offset;
     Servo servo;
-    int servoAngle;
 };
 
 #endif
